@@ -9,11 +9,11 @@ import (
 )
 
 type result struct {
-	failedList  map[string]int8
+	failedList map[string]int8
 }
 
 func main() {
-	cleanPath := flag.String("p", "", "rpmbuild path")
+	cleanPath := flag.String("p", "", "directory that wait clean")
 	showDetail := flag.Bool("v", false, "show detail of clean")
 	flag.Parse()
 
@@ -48,7 +48,7 @@ func clean(cleanPath string, showDetail bool) (result, error) {
 	var failedList = map[string]int8{}
 
 	for _, fInfo := range fileList {
-		curPath := cleanPath+"/"+fInfo.Name()
+		curPath := cleanPath + "/" + fInfo.Name()
 
 		if fInfo.IsDir() {
 			res, err := clean(curPath, showDetail)
@@ -70,7 +70,7 @@ func clean(cleanPath string, showDetail bool) (result, error) {
 			}
 			failedList[curPath] = 0
 
-		}else {
+		} else {
 			if showDetail {
 				fmt.Println("[Remove Faile]Succeed to remove", curPath)
 			}
