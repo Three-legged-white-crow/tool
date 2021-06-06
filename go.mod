@@ -1,3 +1,3 @@
-module path_clean
+module tools
 
 go 1.15
