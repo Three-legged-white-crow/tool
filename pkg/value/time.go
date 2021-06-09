@@ -2,7 +2,6 @@ package value
 
 import (
 	"strconv"
-	"time"
 )
 
 const (
@@ -19,13 +18,12 @@ type TimeRes struct {
 
 // TimeValueFormat return hunman readable string format of time value with `second` offset.
 func TimeValueFormat(timeValue int64) string {
-	res := TimeValueHandle(timeValue)
-
-	time.Now().Second()
 	var hourStr, minuteStr, secondStr string
 
+	res := TimeValueHandle(timeValue)
+
 	if res.Hour > 0 {
-		hourStr = strconv.FormatInt(res.Hour, 64) + timeUnitHour
+		hourStr = strconv.FormatInt(res.Hour, 10) + timeUnitHour
 	}
 
 	if res.Minute > 0 {
