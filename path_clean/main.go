@@ -6,6 +6,9 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
+
+	"tools/pkg/value"
 )
 
 type result struct {
@@ -17,12 +20,16 @@ func main() {
 	showDetail := flag.Bool("v", false, "show detail of clean")
 	flag.Parse()
 
+	startTime := time.Now().Unix()
+
 	aimPath := strings.TrimSuffix(*cleanPath, "/")
 	res, err := clean(aimPath, *showDetail)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+
+	endTime := time.Now().Unix()
 
 	failedList := res.failedList
 
@@ -33,6 +40,9 @@ func main() {
 		}
 		fmt.Println()
 	}
+
+	timeUse := value.TimeValueFormat(endTime - startTime)
+	fmt.Println("time use:", timeUse)
 
 }
 
