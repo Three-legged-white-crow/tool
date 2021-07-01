@@ -20,7 +20,7 @@ func main() {
 	showDetail := flag.Bool("v", false, "show detail of clean")
 	flag.Parse()
 
-	startTime := time.Now().Unix()
+	startTime := time.Now().UnixNano()
 
 	aimPath := strings.TrimSuffix(*cleanPath, "/")
 	res, err := clean(aimPath, *showDetail)
@@ -29,7 +29,7 @@ func main() {
 		return
 	}
 
-	endTime := time.Now().Unix()
+	endTime := time.Now().UnixNano()
 
 	failedList := res.failedList
 
