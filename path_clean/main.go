@@ -3,90 +3,53 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
-	"time"
 
+	"tools/pkg/clean"
 	"tools/pkg/value"
 )
 
-type result struct {
-	failedList map[string]int8
-}
-
 func main() {
-	cleanPath := flag.String("p", "", "directory that wait clean")
+	cleanPath := flag.String("p", "", "directory that need clean")
 	showDetail := flag.Bool("v", false, "show detail of clean")
+	rpmMode := flag.Bool("rpm", false, "clean rpmbuild work directory")
 	flag.Parse()
 
-	startTime := time.Now().UnixNano()
-
-	aimPath := strings.TrimSuffix(*cleanPath, "/")
-	res, err := clean(aimPath, *showDetail)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	endTime := time.Now().UnixNano()
-
-	failedList := res.failedList
-
-	if len(failedList) > 0 {
-		fmt.Println("Failed to clean:")
-		for pathName := range failedList {
-			fmt.Println("  - " + pathName)
+	if len(*cleanPath) > 0 {
+		res, err := clean.CustomClean(*cleanPath, *showDetail)
+		if err != nil {
+			fmt.Println("[Error]Failed to clean specified path:", res.AimPath, ", err:", err)
+		} else {
+			printCleanResult(res)
 		}
+		fmt.Println("-------------------------------------------------------------")
 		fmt.Println()
 	}
 
-	timeUse := value.TimeValueFormat(endTime - startTime)
-	fmt.Println("time use:", timeUse)
+	if *rpmMode {
+		res, err := clean.RPMClean(*showDetail)
+		if err != nil {
+			fmt.Println("[Error]Failed to clean rpm work directory:", res.AimPath, ", err:", err)
+		} else {
+			printCleanResult(res)
+		}
+		fmt.Println("-------------------------------------------------------------")
+		fmt.Println()
+	}
 
 }
 
-func clean(cleanPath string, showDetail bool) (result, error) {
-	fileList, err := ioutil.ReadDir(cleanPath)
-	if err != nil {
-		if showDetail {
-			fmt.Println("[Read Dir]Failed to read dir", cleanPath, "and err:", err)
-		}
-		return result{}, err
+func printCleanResult(res clean.Result) {
+	fmt.Println()
+	fmt.Println("* Clean aim path:", res.AimPath)
+	timeUse := value.TimeValueFormat(res.TimeEnd - res.TimeStart)
+	fmt.Println("* Time use:", timeUse)
+
+	if len(res.FailedList) == 0 {
+		return
 	}
 
-	var failedList = map[string]int8{}
-
-	for _, fInfo := range fileList {
-		curPath := cleanPath + "/" + fInfo.Name()
-
-		if fInfo.IsDir() {
-			res, err := clean(curPath, showDetail)
-			if err != nil {
-				failedList[curPath] = 0
-				continue
-			}
-
-			for f := range res.failedList {
-				failedList[f] = 0
-			}
-			continue
-		}
-
-		err = os.Remove(curPath)
-		if err != nil {
-			if showDetail {
-				fmt.Println("[Remove Faile]Failed to remove", curPath, "and err:", err)
-			}
-			failedList[curPath] = 0
-
-		} else {
-			if showDetail {
-				fmt.Println("[Remove Faile]Succeed to remove", curPath)
-			}
-		}
-
+	fmt.Println("* Failed to clean:")
+	for pathName := range res.FailedList {
+		fmt.Println("  - " + pathName)
 	}
-
-	return result{failedList: failedList}, nil
 }
