@@ -38,13 +38,13 @@ func CustomClean(aimPath string, showDetail bool) (Result, error) {
 func RPMClean(showDetail bool) (Result, error) {
 	res := Result{}
 
-	curRPMWorkDir, err := path.RPMWorkDir()
+	curRPMWorkDir, err := path.RPMWorkDir(showDetail)
 	if err != nil {
-		if showDetail {
-			fmt.Println("[RPM Dir]Failed to get rpm work dir, err:", err)
-		}
+		fmt.Println("[RPM Dir]Failed to get rpm work dir, err:", err)
 		return res, err
 	}
+
+	fmt.Println("[RPM Dir]Succeed to get rpm work dir:", curRPMWorkDir)
 
 	res.AimPath = curRPMWorkDir
 	startTime := time.Now().UnixNano()
