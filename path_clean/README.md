@@ -8,14 +8,15 @@
 ---
 
 - linux64: `make linux64`
-- windows64: `make windows64`
 
 
 ### usage
 ---
 
-- `./pc -p aim_path -v` will delete files of `aim_path` recursively while preserving the directory structure
+- `./pc -p aim_path --rpm -v` will delete files of `aim_path` and rpm work dir recursively while preserving the
+  directory structure
 
 - Usage of `./pc`:
   - -p string directory that wait clean
-  - -v        show detail of clean
+  - -rpm clean rpmbuild work directory
+  - -v show detail of clean
