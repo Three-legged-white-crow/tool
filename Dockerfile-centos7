@@ -1,0 +1,13 @@
+# build tools
+FROM golang as builder
+
+COPY ./ /projects/tool/
+WORKDIR /projects/tool/
+RUN make
+
+
+# final image
+FROM centos:centos7
+
+COPY --from=builder /projects/tool/cmd/* /usr/local/bin/
+RUN ls -l /usr/local/bin
