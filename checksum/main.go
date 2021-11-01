@@ -117,9 +117,8 @@ func compare(src, dest []byte) bool {
 
 func md5File(path string, res []byte) error {
 	// todo: check file is exists? if exists create a new file?
-	l := len(res)
-	dst := make([]byte, hex.EncodedLen(l))
-	hex.Encode(dst, res)
+	dst := make([]byte, hex.EncodedLen(len(res)))
+	l := hex.Encode(dst, res)
 	reshex := string(dst)
 
 	log.Println("[Checksum]Hexadecimal encoding checksum string:", reshex)
