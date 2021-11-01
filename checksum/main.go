@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"flag"
 	"io"
@@ -117,6 +118,11 @@ func compare(src, dest []byte) bool {
 func md5File(path string, res []byte) error {
 	// todo: check file is exists? if exists create a new file?
 	l := len(res)
+	dst := make([]byte, hex.EncodedLen(l))
+	hex.Encode(dst, res)
+	reshex := string(dst)
+
+	log.Println("[Checksum]Hexadecimal encoding checksum string:", reshex)
 
 	f, err := os.Create(path)
 	if err != nil {
@@ -124,7 +130,7 @@ func md5File(path string, res []byte) error {
 	}
 	defer f.Close()
 
-	n, err := f.Write(res)
+	n, err := f.Write(dst)
 	if err != nil {
 		return err
 	}
