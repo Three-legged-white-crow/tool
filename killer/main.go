@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
 	"syscall"
@@ -35,13 +36,33 @@ func main() {
 		"signal",
 		0,
 		"signal that send to process")
+
+	loopMod := flag.Bool(
+		"loop",
+		false,
+		"loop kill process")
+
+	randStart := flag.Int(
+		"rand-start",
+		0,
+		"start of range to rand, effective at loop mod, unit is second")
+
+	randEnd := flag.Int(
+		"rand-end",
+		0,
+		"end of range to rand, effective at loop mod and must specify, unit is second")
+
 	flag.Parse()
 
 	log.SetOutput(os.Stderr)
 	log.Println("[Killer-Info]New kill request:",
 		"name:", *name,
 		"command:", *cmdContent,
-		"signal:", *signalNum)
+		"signal:", *signalNum,
+		"loopMod:", *loopMod,
+		"randStart:", *randStart,
+		"randEnd:", *randEnd,
+	)
 
 	var isNameEmpty, isCommandEmpty, isSignalInvalid bool
 
@@ -66,6 +87,57 @@ func main() {
 		isSignalInvalid = true
 	}
 
+	req := killReq{
+		name:            *name,
+		isNameEmpty:     isNameEmpty,
+		command:         *cmdContent,
+		isCommandEmpty:  isCommandEmpty,
+		signal:          *signalNum,
+		isSignalInvalid: isSignalInvalid,
+	}
+
+	if !(*loopMod) {
+		kill(req)
+		return
+	}
+
+	if *randEnd == 0 {
+		log.Println("[Killer-Error]Must specify end of range ues to rand")
+		return
+	}
+
+	if *randStart < 0 {
+		log.Println("[Killer-Error]Start of range use to rand must >= 0")
+		return
+	}
+
+	if *randEnd < 0 {
+		log.Println("[Killer-Error]End of range use to rand must > 0")
+		return
+	}
+
+	var sleepRand int
+	rand.Seed(time.Now().UnixNano())
+
+	for {
+		sleepRand = rand.Intn(*randEnd-*randStart+1) + *randStart
+		log.Println("[Killer-Info]Sleep", sleepRand, "second and then kill process")
+		time.Sleep(time.Duration(sleepRand) * time.Second)
+		kill(req)
+	}
+
+}
+
+type killReq struct {
+	name            string
+	isNameEmpty     bool
+	command         string
+	isCommandEmpty  bool
+	signal          int
+	isSignalInvalid bool
+}
+
+func kill(req killReq) {
 	processList, err := process.Processes()
 	if err != nil {
 		return
@@ -85,9 +157,9 @@ func main() {
 		numMatchCmd  int
 	)
 	for _, curProcess := range processList {
-		if !isNameEmpty {
+		if !req.isNameEmpty {
 			pName, err = curProcess.Name()
-			if !strings.Contains(pName, *name) {
+			if !strings.Contains(pName, req.name) {
 				continue
 			}
 			numMatchName += 1
@@ -105,12 +177,12 @@ func main() {
 		threadNum, err = curProcess.NumThreads()
 
 		pCmd, err = curProcess.Cmdline()
-		if !isCommandEmpty {
+		if !req.isCommandEmpty {
 			if err != nil {
 				continue
 			}
 
-			if pCmd != *cmdContent {
+			if pCmd != req.command {
 				continue
 			}
 
@@ -124,17 +196,17 @@ func main() {
 				"create-time:", ts,
 				"threads:", threadNum)
 
-			if isSignalInvalid {
+			if req.isSignalInvalid {
 				log.Println("[Killer-Wraning]Specify signal is invalid, do nothing")
 				return
 
 			} else {
-				err = curProcess.SendSignal(syscall.Signal(*signalNum))
+				err = curProcess.SendSignal(syscall.Signal(req.signal))
 				if err != nil {
-					log.Println("[Killer-Error]Failed to send signal:", *signalNum, "to process and err:", err.Error())
+					log.Println("[Killer-Error]Failed to send signal:", req.signal, "to process and err:", err.Error())
 					return
 				}
-				log.Println("[Killer-Info]Succeed to send signal:", *signalNum, "to process")
+				log.Println("[Killer-Info]Succeed to send signal:", req.signal, "to process")
 				return
 			}
 
