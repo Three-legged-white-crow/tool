@@ -117,10 +117,9 @@ func main() {
 	}
 
 	var sleepRand int
-	rand.Seed(time.Now().UnixNano())
 
 	for {
-		sleepRand = rand.Intn(*randEnd-*randStart+1) + *randStart
+		sleepRand = rand.New(rand.NewSource(time.Now().UnixNano())).Intn(*randEnd-*randStart+1) + *randStart
 		log.Println("[Killer-Info]Sleep", sleepRand, "second and then kill process")
 		time.Sleep(time.Duration(sleepRand) * time.Second)
 		kill(req)
