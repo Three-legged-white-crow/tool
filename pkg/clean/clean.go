@@ -2,7 +2,6 @@ package clean
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -62,9 +61,11 @@ func RPMClean(showDetail bool) (Result, error) {
 	return res, nil
 }
 
+// Fixme: Not suitable for large directories, because it will use a lot of memory(OOM or hang os), or cause stack overflow
+
 func Clean(cleanPath string, showDetail bool) (map[string]string, error) {
 	cleanPath = strings.TrimSuffix(cleanPath, "/")
-	fileList, err := ioutil.ReadDir(cleanPath)
+	fileList, err := os.ReadDir(cleanPath)
 	if err != nil {
 		if showDetail {
 			fmt.Println("[Read Dir]Failed to read dir:", cleanPath, "and err:", err)
